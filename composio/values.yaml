@@ -624,7 +624,7 @@ serviceAccount:
 # OpenTelemetry observability configuration
 otel:
   # -- Enable OpenTelemetry
-  enabled: true
+  enabled: false
   # OTLP exporter configuration
   exporter:
     otlp:
@@ -986,7 +986,7 @@ mercury:
 # Frontend service configuration (web UI)
 frontend:
   # -- Enable frontend service
-  enabled: false
+  enabled: true
   # -- Number of frontend pod replicas
   replicaCount: 1
   # Frontend container image configuration
@@ -994,7 +994,7 @@ frontend:
     # -- Frontend image repository
     repository: composio-self-host/frontend
     # -- Frontend image tag
-    tag: "latest"
+    tag: "release-20251209_00"
     # -- Image pull policy
     pullPolicy: Always
   # Frontend service configuration
