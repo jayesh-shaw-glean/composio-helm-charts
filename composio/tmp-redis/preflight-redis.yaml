@@ -15,9 +15,9 @@ stringData:
       collectors:
         # Password secret is optional in your chart; still check if provided
         - secret:
-            name: "{{ .Values.redisConnection.password.secretRef }}"
+            name: "{{ .Values.externalRedis.secretRef }}"
             namespace: "{{ .Release.Namespace }}"
-            key: "{{ .Values.redisConnection.password.key }}"
+            key: "{{ .Values.externalRedis.key }}"
             includeValue: false
 
         - runPod:
@@ -31,7 +31,7 @@ stringData:
                   image: redis:7-alpine
                   env:
                     - name: REDIS_HOST
-                      value: "{{ .Values.redisConnection.host }}"
+                      value: "{{ .Values.externalRedis.host }}"
                     - name: REDIS_PORT
                       value: "{{ .Values.redisConnection.port | quote }}"
                     - name: REDIS_PASSWORD

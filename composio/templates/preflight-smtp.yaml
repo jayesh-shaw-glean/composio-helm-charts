@@ -11,7 +11,7 @@ stringData:
     metadata:
       name: "{{ .Release.Name }}-smtp-preflight"
     spec:
-      {{- if .Values.smtp.connectionString }}
+      {{- if .Values.apollo.smtp.enabled }}
       collectors:
         - secret:
             name: "{{ .Values.smtp.password.secretRef }}"
