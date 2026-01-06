@@ -77,6 +77,97 @@ thermos:
 otel:
   enabled: false
 
+temporal:
+  # -- Override the full name of Temporal resources
+  fullnameOverride: "replicated-test"
+  
+  # Temporal server configuration
+  server:
+    # -- Enable Temporal server
+    enabled: true
+    # Liveness probe configuration
+    livenessProbe:
+      # -- Enable liveness probe
+      enabled: false
+
+    # Readiness probe configuration
+    readinessProbe:
+      # -- Enable readiness probe
+      enabled: false
+
+    # -- Number of Temporal server replicas
+    replicaCount: 2
+    # Temporal server image configuration
+    image:
+      # -- Temporal server image repository
+      repository: temporalio/server
+      # -- Temporal server image tag
+      tag: 1.28.0
+      # -- Image pull policy
+      pullPolicy: IfNotPresent
+    
+    # Temporal server configuration
+    config:
+      # -- Log level (debug, info, warn, error)
+      logLevel: "info"
+      # -- Number of history shards (affects scalability)
+      numHistoryShards: 512
+      
+      # Persistence configuration for Temporal data
+      persistence:
+        # -- Default persistence store
+        defaultStore: default
+        
+        # Main Temporal database configuration
+        default:
+          # -- Database driver
+          driver: "sql"
+          # SQL database configuration
+          sql:
+            # -- SQL driver name
+            driver: "postgres12"
+            # -- Database host
+            host: "postgres-new.db"
+            # -- Database port
+            port: 5432
+            # -- Database name
+            database: "temporal"
+            # -- Database user
+            user: "composio"
+            # -- Secret name containing database password
+            existingSecret: "rrs-test-postgres"
+            # -- Maximum number of database connections
+            maxConns: 20
+            # -- Maximum number of idle connections
+            maxIdleConns: 20
+            # -- Maximum connection lifetime
+            maxConnLifetime: "1h"
+        
+        # Visibility database configuration (for advanced queries)
+        visibility:
+          # -- Database driver
+          driver: "sql" 
+          # SQL database configuration
+          sql:
+            # -- SQL driver name
+            driver: "postgres12"
+            # -- Database host
+            host: "postgres-new.db"
+            # -- Database port
+            port: 5432
+            # -- Database name
+            database: "temporal_visibility"
+            # -- Database user
+            user: "composio"
+            # -- Secret name containing database password
+            existingSecret: "rrs-test-postgres"
+            # -- Maximum number of database connections
+            maxConns: 20
+            # -- Maximum number of idle connections
+            maxIdleConns: 20
+            # -- Maximum connection lifetime
+            maxConnLifetime: "1h"
+
 # Mercury service configuration (OpenAPI tool execution service)
 mercury:
   enabled: true
