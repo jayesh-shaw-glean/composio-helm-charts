@@ -55,7 +55,7 @@ jobs:
       - name: Check replicated
         run: |
           set -e
-          replicated app ls 
+          replicated app ls &> /dev/null || exit 1 
         env:
           REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
       
@@ -104,9 +104,10 @@ jobs:
           echo "Packaging Helm chart..."
           helm package ./composio --destination manifests
           echo "Creating Replicated release..."
-          replicated release create --yaml-dir manifests --promote $PROMOTE --version ${{ steps.version.outputs.new }}
+          replicated release create \
+          --yaml-dir manifests \
+          --promote "${{ steps.metadata.outputs.promote }}" \
+          --version "${{ steps.version.outputs.new }}"
         env:
           REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
           REPLICATED_APP: composio-rodent
-          PROMOTE: ${{ steps.version.outputs.promote }}
-
