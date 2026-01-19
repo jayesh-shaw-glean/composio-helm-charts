@@ -11,9 +11,7 @@ jobs:
   release-helm-chart:
     runs-on: ubuntu-latest
     if: |
-      github.event.action == 'prereleased' && 
-      (startsWith(github.event.release.tag_name, 'release-unstable-') || 
-       startsWith(github.event.release.tag_name, 'release-beta-'))
+      github.event.action == 'prereleased' 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,9 +31,7 @@ jobs:
           echo "::endgroup::"
           
           # Determine promotion channel based on tag pattern
-          if [[ "$TAG_NAME" == release-unstable-* ]]; then
-            PROMOTE="Unstable"
-          elif [[ "$TAG_NAME" == release-beta-* ]]; then
+          if [[ "$TAG_NAME" == release-beta-* ]]; then
             PROMOTE="Beta"
           else
             PROMOTE="Unstable"
