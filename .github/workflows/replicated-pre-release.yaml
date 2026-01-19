@@ -1,0 +1,112 @@
+name: Helm Chart Release
+on:
+  release:
+    types: [prereleased] #TODO: Make it run on released
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-helm-chart:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.release.tag_name }}
+      
+      - name: Extract version and set promotion channel
+        id: metadata
+        run: |
+          TAG_NAME=${{ github.event.release.tag_name }}
+          
+          echo "::group::Debug Info"
+          echo "Tag: $TAG_NAME"
+          echo "Release Name: ${{ github.event.release.name }}"
+          echo "Is Prerelease: ${{ github.event.release.prerelease }}"
+          echo "::endgroup::"
+          
+          # Determine promotion channel based on tag pattern
+          if [[ "$TAG_NAME" == release-unstable-* ]]; then
+            PROMOTE="Unstable"
+          elif [[ "$TAG_NAME" == release-beta-* ]]; then
+            PROMOTE="Beta"
+          else
+            PROMOTE="Unstable"
+          fi
+          
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "promote=$PROMOTE" >> $GITHUB_OUTPUT
+          echo "✅ Tag: $TAG_NAME"
+          echo "✅ Promote: $PROMOTE"
+      
+      - name: Install Replicated CLI
+        run: |
+          version=$(curl -s https://api.github.com/repos/replicatedhq/replicated/releases/latest \
+            | grep -m1 -Po '"tag_name":\s*"v\K[^"]+')
+          curl -Ls \
+            "https://github.com/replicatedhq/replicated/releases/download/v${version}/replicated_${version}_linux_amd64.tar.gz" \
+            -o replicated.tar.gz
+          tar xf replicated.tar.gz replicated && rm replicated.tar.gz
+          sudo mv replicated /usr/local/bin/replicated
+      
+      - name: Check replicated
+        run: |
+          set -e
+          replicated app ls 
+        env:
+          REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
+      
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+      
+      - name: Run Helm template  
+        run: | 
+          helm template composio ./composio
+      
+      - name: Get and bump version
+        id: version
+        run: |
+          cd ./composio
+          CURRENT_APPVERSION=$(grep '^appVersion:' ./Chart.yaml | awk '{print $2}' | tr -d '"')
+          NEW_APPVERSION=$(echo "$CURRENT_APPVERSION" | awk -F. '{$NF = $NF + 1} 1' OFS=.)
+          echo "current=$CURRENT_APPVERSION" >> $GITHUB_OUTPUT
+          echo "new=$NEW_APPVERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_APPVERSION"
+          echo "New version: $NEW_APPVERSION"
+
+      - name: Update Chart.yaml versions
+        run: |
+          cd ./composio
+          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.new }}\"/" ./Chart.yaml
+          sed -i "s/^version:.*/version: \"${{ steps.version.outputs.new }}\"/" ./Chart.yaml
+          echo "Updated Chart.yaml"
+
+      - name: Update manifest versions
+        run: |
+          cd ./manifests
+          sed -i "s|^\s*app.kubernetes.io/version:.*|    app.kubernetes.io/version: \"${{ steps.version.outputs.new }}\"|" ./k8s-app.yaml
+          sed -i "s|^\([[:space:]]*\)version:.*|\1version: \"${{ steps.version.outputs.new }}\"|" ./k8s-app.yaml
+          sed -i "s|^\([[:space:]]*\)chartVersion:.*|\1chartVersion: ${{ steps.version.outputs.new }}|" ./composio.yaml
+          echo "Updated manifest files"
+
+      - name: Clean old packages
+        run: |
+          echo "Removing old tgz files"
+          rm -f ./manifests/*.tgz
+
+      - name: Package and create Replicated release
+        run: |
+          echo "Packaging Helm chart..."
+          helm package ./composio --destination manifests
+          echo "Creating Replicated release..."
+          replicated release create --yaml-dir manifests --promote $PROMOTE --version ${{ steps.version.outputs.new }}
+        env:
+          REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
+          REPLICATED_APP: composio-rodent
+          PROMOTE: ${{ steps.version.outputs.promote }}
+

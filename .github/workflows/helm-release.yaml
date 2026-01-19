@@ -1,10 +1,8 @@
 name: Helm Chart Release
 
 on:
-  push:
-    tags:
-      - 'release-*'  # Triggers on tags like release-20251209_00
-
+  workflow_dispatch:
+    
 permissions:
   contents: write
   pull-requests: write
