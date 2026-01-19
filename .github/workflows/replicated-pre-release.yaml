@@ -1,7 +1,7 @@
 name: Helm Chart Release
 on:
   release:
-    types: [prereleased] #TODO: Make it run on released
+    types: [prereleased, released]
 
 permissions:
   contents: write
@@ -10,6 +10,10 @@ permissions:
 jobs:
   release-helm-chart:
     runs-on: ubuntu-latest
+    if: |
+      github.event.action == 'prereleased' && 
+      (startsWith(github.event.release.tag_name, 'release-unstable-') || 
+       startsWith(github.event.release.tag_name, 'release-beta-'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -108,6 +112,80 @@ jobs:
           --yaml-dir manifests \
           --promote "${{ steps.metadata.outputs.promote }}" \
           --version "${{ steps.version.outputs.new }}"
+        env:
+          REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
+          REPLICATED_APP: composio-rodent
+
+  release-stable:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'released'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.release.tag_name }}
+      
+      - name: Extract version
+        id: metadata
+        run: |
+          TAG_NAME=${{ github.event.release.tag_name }}
+          
+          echo "::group::Release Info"
+          echo "Tag: $TAG_NAME"
+          echo "Release Name: ${{ github.event.release.name }}"
+          echo "Converting pre-release to stable release"
+          echo "::endgroup::"
+          
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "promote=Stable" >> $GITHUB_OUTPUT
+          echo "✅ Tag: $TAG_NAME"
+          echo "✅ Promote: Stable"
+      
+      - name: Install Replicated CLI
+        run: |
+          version=$(curl -s https://api.github.com/repos/replicatedhq/replicated/releases/latest \
+            | grep -m1 -Po '"tag_name":\s*"v\K[^"]+')
+          curl -Ls \
+            "https://github.com/replicatedhq/replicated/releases/download/v${version}/replicated_${version}_linux_amd64.tar.gz" \
+            -o replicated.tar.gz
+          tar xf replicated.tar.gz replicated && rm replicated.tar.gz
+          sudo mv replicated /usr/local/bin/replicated
+      
+      - name: Check replicated
+        run: |
+          set -e
+          replicated app ls &> /dev/null || exit 1 
+        env:
+          REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
+      
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+      
+      - name: Get current version (no bump)
+        id: version
+        run: |
+          cd ./composio
+          CURRENT_APPVERSION=$(grep '^appVersion:' ./Chart.yaml | awk '{print $2}' | tr -d '"')
+          echo "current=$CURRENT_APPVERSION" >> $GITHUB_OUTPUT
+          echo "Current version (will be promoted to Stable): $CURRENT_APPVERSION"
+      
+      - name: Clean old packages
+        run: |
+          echo "Removing old tgz files"
+          rm -f ./manifests/*.tgz
+
+      - name: Package and promote to Stable
+        run: |
+          echo "Packaging Helm chart..."
+          helm package ./composio --destination manifests
+          echo "Promoting existing version to Stable channel..."
+          replicated release create \
+            --yaml-dir manifests \
+            --promote Stable \
+            --version "${{ steps.version.outputs.current }}"
         env:
           REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
           REPLICATED_APP: composio-rodent
