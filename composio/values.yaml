@@ -1104,7 +1104,7 @@ weaviate:
     # -- Weaviate image repository
     repository: composio-self-host/weaviate
     # -- Weaviate image tag
-    tag: "release-20251209_00"
+    tag: "r20260119_00"
     # -- Image pull policy
     pullPolicy: Always
   # Weaviate service configuration
