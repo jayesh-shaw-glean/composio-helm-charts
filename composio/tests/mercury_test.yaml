@@ -1,6 +1,6 @@
 suite: test mercury deployment
 templates:
-  - mercury.yaml
+  - mercury/mercury.yaml
 tests:
   - it: should create mercury deployment when enabled and not using knative
     set:
@@ -148,7 +148,7 @@ tests:
 ---
 suite: test mercury service
 templates:
-  - mercury-service.yaml
+  - mercury/mercury-service.yaml
 tests:
   - it: should create mercury service
     asserts:

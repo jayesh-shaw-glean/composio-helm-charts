@@ -1,6 +1,6 @@
 suite: test db init job
 templates:
-  - db-init-job.yaml
+  - apollo/apollo-db-init.job.yaml
 tests:
   - it: should create db init job
     asserts:

@@ -1,6 +1,6 @@
 suite: test knative serving
 templates:
-  - knative-serving.yaml
+  - knative/knative-serving.yaml
 tests:
   - it: should create knative serving when mercury uses knative
     set:
@@ -94,7 +94,7 @@ tests:
 ---
 suite: test knative crds
 templates:
-  - knative-crds.yaml
+  - knative/knative-crds.yaml
 tests:
   - it: should create service custom resource definition
     documentIndex: 0

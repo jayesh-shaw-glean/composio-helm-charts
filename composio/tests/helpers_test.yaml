@@ -1,14 +1,22 @@
 suite: test helper functions
 templates:
-  - apollo.yaml  # Using apollo as a test template since helpers are included
+  - apollo/apollo.yaml  # Using apollo as a test template since helpers are included
 tests:
   - it: should generate correct name with composio.name helper
+    documentIndex: 1
+    set:
+      redis.enabled: true
+      externalRedis.enabled: false
     asserts:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-apollo  # This uses the helper function
 
   - it: should generate labels with composio.labels helper
+    documentIndex: 1
+    set:
+      redis.enabled: true
+      externalRedis.enabled: false
     asserts:
       - equal:
           path: metadata.labels.app
@@ -18,7 +26,10 @@ tests:
           value: RELEASE-NAME
 
   - it: should use custom name override
+    documentIndex: 1
     set:
+      redis.enabled: true
+      externalRedis.enabled: false
       nameOverride: custom-name
     asserts:
       - matchRegex:
@@ -26,7 +37,10 @@ tests:
           pattern: ".*custom-name.*"
 
   - it: should use fullname override
+    documentIndex: 1
     set:
+      redis.enabled: true
+      externalRedis.enabled: false
       fullnameOverride: full-custom-name
     asserts:
       - matchRegex:
@@ -36,7 +50,7 @@ tests:
 ---
 suite: test namespace helper
 templates:
-  - mercury.yaml  # Using mercury as it uses namespace helper
+  - mercury/mercury.yaml  # Using mercury as it uses namespace helper
 tests:
   - it: should use default namespace when create is false
     set:
@@ -57,4 +71,4 @@ tests:
     asserts:
       - equal:
           path: metadata.namespace
-          value: custom-namespace 
+          value: custom-namespace

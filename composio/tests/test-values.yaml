@@ -92,4 +92,80 @@ dbInit:
   database:
     urlSecret:
       name: "test-db-secret"
-      key: "url" 
+      key: "url"
+
+frontend:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: test-frontend
+    tag: "test"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+  env:
+    PORT: "3000"
+    NODE_ENV: "production"
+    NEXT_PUBLIC_SELF_HOSTED: "true"
+  ingress:
+    enabled: false
+
+weaviate:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: test-weaviate
+    tag: "test"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+    grpcPort: 50051
+  auth:
+    anonymousAccess: "true"
+  persistence:
+    enabled: false
+    size: "10Gi"
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+aws:
+  region: "us-east-1"
+
+otel:
+  enabled: false
+
+replicated:
+  enabled: false
+
+openAI:
+  enabled: false
+
+redis:
+  enabled: true
+
+externalRedis:
+  enabled: false 

@@ -1,6 +1,6 @@
 suite: test mercury ingress
 templates:
-  - mercury-ingress.yaml
+  - mercury/mercury-ingress.yaml
 tests:
   - it: should create ingress when enabled
     set:

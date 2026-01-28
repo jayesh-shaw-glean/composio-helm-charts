@@ -1,8 +1,9 @@
 suite: test thermos deployment
 templates:
-  - thermos.yaml
+  - thermos/thermos.yaml
 tests:
   - it: should create thermos deployment
+    documentIndex: 1
     asserts:
       - isKind:
           of: Deployment
@@ -17,6 +18,7 @@ tests:
           value: RELEASE-NAME
 
   - it: should have correct replica count
+    documentIndex: 1
     set:
       thermos.replicaCount: 2
     asserts:
@@ -25,6 +27,7 @@ tests:
           value: 2
 
   - it: should use correct image
+    documentIndex: 1
     set:
       thermos.image.repository: test-thermos
       thermos.image.tag: latest
@@ -38,12 +41,14 @@ tests:
           value: Always
 
   - it: should have correct port configuration
+    documentIndex: 1
     asserts:
       - equal:
           path: spec.template.spec.containers[0].ports[0].containerPort
           value: 8180
 
   - it: should have correct resource configuration
+    documentIndex: 1
     set:
       thermos.resources:
         requests:
@@ -61,6 +66,7 @@ tests:
           value: "1"
 
   - it: should include image pull secrets when configured
+    documentIndex: 1
     set:
       global.imagePullSecrets:
         - name: thermos-secret
@@ -70,6 +76,7 @@ tests:
           value: thermos-secret
 
   - it: should have rolling update strategy
+    documentIndex: 1
     asserts:
       - equal:
           path: spec.strategy.type
@@ -84,10 +91,10 @@ tests:
 ---
 suite: test thermos service
 templates:
-  - thermos.yaml
+  - thermos/thermos.yaml
 tests:
   - it: should create thermos service
-    documentIndex: 1
+    documentIndex: 0
     asserts:
       - isKind:
           of: Service
@@ -99,7 +106,7 @@ tests:
           value: thermos
 
   - it: should have correct service configuration
-    documentIndex: 1
+    documentIndex: 0
     set:
       thermos.service.type: ClusterIP
       thermos.service.port: 8180
