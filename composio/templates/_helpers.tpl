@@ -19,30 +19,15 @@ Expand the name of the chart.
 {{- end -}}
 
 
-{{- define "apollo-admin-token" -}}
+{{- define "composio-admin-token" -}}
 {{- $coreName := include "composio.coreSecretName" . -}}
 {{- $core := lookup "v1" "Secret" .Release.Namespace $coreName -}}
-{{- if and $core (hasKey $core.data "APOLLO_ADMIN_TOKEN") -}}
-  {{- index $core.data "APOLLO_ADMIN_TOKEN" | b64dec -}}
+{{- if and $core (hasKey $core.data "COMPOSIO_ADMIN_TOKEN") -}}
+  {{- index $core.data "COMPOSIO_ADMIN_TOKEN" | b64dec -}}
 {{- else -}}
-  {{- $legacy := lookup "v1" "Secret" .Release.Namespace (printf "%s-apollo-admin-token" .Release.Name) -}}
-  {{- if and $legacy (hasKey $legacy.data "APOLLO_ADMIN_TOKEN") -}}
-    {{- index $legacy.data "APOLLO_ADMIN_TOKEN" | b64dec -}}
-  {{- else -}}
-    {{- randAlphaNum 32 -}}
-  {{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "composio-api-key" -}}
-{{- $coreName := include "composio.coreSecretName" . -}}
-{{- $core := lookup "v1" "Secret" .Release.Namespace $coreName -}}
-{{- if and $core (hasKey $core.data "COMPOSIO_API_KEY") -}}
-  {{- index $core.data "COMPOSIO_API_KEY" | b64dec -}}
-{{- else -}}
-  {{- $legacy := lookup "v1" "Secret" .Release.Namespace (printf "%s-composio-api-key" .Release.Name) -}}
-  {{- if and $legacy (hasKey $legacy.data "COMPOSIO_API_KEY") -}}
-    {{- index $legacy.data "COMPOSIO_API_KEY" | b64dec -}}
+  {{- $legacy := lookup "v1" "Secret" .Release.Namespace (printf "%s-composio-admin-token" .Release.Name) -}}
+  {{- if and $legacy (hasKey $legacy.data "COMPOSIO_ADMIN_TOKEN") -}}
+    {{- index $legacy.data "COMPOSIO_ADMIN_TOKEN" | b64dec -}}
   {{- else -}}
     {{- randAlphaNum 32 -}}
   {{- end -}}
@@ -77,6 +62,18 @@ Expand the name of the chart.
   {{- else -}}
     {{- randAlphaNum 32 -}}
   {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Check if Temporal is enabled via features.temporal flag
+This flag both deploys the temporal subchart (via Chart.yaml condition) and configures thermos to use it
+*/}}
+{{- define "composio.temporalEnabled" -}}
+{{- if and .Values.features .Values.features.temporal -}}
+true
+{{- else -}}
+false
 {{- end -}}
 {{- end -}}
 
@@ -285,6 +282,7 @@ Compile all warnings into a single message, and call fail.
 {{- $messages := list -}}
 {{- $messages := append $messages (include "composio.validateValues.database" .) -}}
 {{- $messages := append $messages (include "composio.validateValues.redis" .) -}}
+
 {{- $messages := without $messages "" -}}
 {{- $message := join "\n" $messages -}}
 {{- if $message -}}
@@ -303,6 +301,9 @@ composio: database
 {{- end -}}
 {{- end -}}
 
+{{/*
+Validate Redis configuration
+*/}}
 {{/*
 Validate Redis configuration
 */}}

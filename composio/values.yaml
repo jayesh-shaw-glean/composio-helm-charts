@@ -2,6 +2,12 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Feature flags for optional functionality
+features:
+  # -- Enable Temporal, auth token refresh, and triggers
+  # When true, deploys Temporal and enables auth refresh + trigger workers in thermos
+  temporal: false
+
 # Composio Application Secrets
 secret:
   name: "composio-composio-secrets"
@@ -387,7 +393,7 @@ dbInit:
 temporal:
   # -- Override the full name of Temporal resources
   fullnameOverride: "temporal-stack"
-  
+
   # Temporal server configuration
   server:
     # -- Enable Temporal server
