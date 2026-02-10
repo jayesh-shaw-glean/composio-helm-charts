@@ -1115,7 +1115,7 @@ weaviate:
     # -- Weaviate image repository
     repository: composio-self-host/weaviate
     # -- Weaviate image tag
-    tag: "cohere"
+    tag: "r20260210_00"
     # -- Image pull policy
     pullPolicy: Always
   # Weaviate service configuration
